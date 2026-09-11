@@ -63,18 +63,25 @@ const PORT = process.env.PORT || 5000;
 
 async function seedAdminUser() {
   try {
-    const adminEmail = "dubeyshreya606@gmail.com";
+    const adminEmail = process.env.ADMIN_EMAIL;
+    const adminPassword = process.env.ADMIN_PASSWORD;
+
+    if (!adminEmail || !adminPassword) {
+      console.log("[SEED] ADMIN_EMAIL or ADMIN_PASSWORD not configured in environment variables. Skipping automatic admin creation.");
+      return;
+    }
+
     const existingAdmin = await User.findOne({ email: adminEmail });
     if (!existingAdmin) {
-      const hash = await bcrypt.hash("26112611", 12);
+      const hash = await bcrypt.hash(adminPassword, 12);
       await User.create({
-        name: "Shreya Dubey (System Admin)",
+        name: process.env.ADMIN_NAME || "System Admin",
         email: adminEmail,
         password: hash,
         role: "admin",
         approvalStatus: "approved",
         isBlocked: false,
-        phone: "9876543210"
+        phone: process.env.ADMIN_PHONE || "0000000000"
       });
       console.log(`[SEED] Admin account (${adminEmail}) seeded successfully!`);
     } else {
