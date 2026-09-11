@@ -1,0 +1,9 @@
+{
+  "appId": "com.smarthealthcare.app",
+  "appName": "smart-healthcare-app",
+  "webDir": "frontend/dist",
+  "server": {
+    "androidScheme": "http",
+    "cleartext": true
+  }
+}
