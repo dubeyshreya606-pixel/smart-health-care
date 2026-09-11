@@ -18,7 +18,11 @@ const serviceAccount = existsSync(serviceAccountPath)
 
 const credential = serviceAccount || (
   projectId && clientEmail && privateKey
-    ? { projectId, clientEmail, privateKey }
+    ? {
+        projectId,
+        clientEmail,
+        privateKey: privateKey?.replace(/\\n/g, "\n")
+      }
     : null
 );
 
