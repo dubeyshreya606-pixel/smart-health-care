@@ -1,48 +1,66 @@
 import { cert, getApps, initializeApp } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
-import { existsSync, readFileSync } from "node:fs";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
 
-const projectId = process.env.FIREBASE_PROJECT_ID;
-const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n");
-const serviceAccountPath = path.resolve(
-  path.dirname(fileURLToPath(import.meta.url)),
-  "../../serviceAccountKey.json"
-);
+let firebaseAdminConfigured = false;
 
-const serviceAccount = existsSync(serviceAccountPath)
-  ? JSON.parse(readFileSync(serviceAccountPath, "utf8"))
-  : null;
+try {
+  const base64Credentials =
+    process.env.FIREBASE_SERVICE_ACCOUNT_BASE64;
 
-const credential = serviceAccount || (
-  projectId && clientEmail && privateKey
-    ? {
-        projectId,
-        clientEmail,
-        privateKey: privateKey?.replace(/\\n/g, "\n")
-      }
-    : null
-);
+  if (base64Credentials) {
+    const jsonString = Buffer.from(
+      base64Credentials,
+      "base64"
+    ).toString("utf8");
 
-const firebaseAdminConfigured = Boolean(credential);
+    const serviceAccount = JSON.parse(jsonString);
 
-if (firebaseAdminConfigured && getApps().length === 0) {
-  initializeApp({
-    credential: cert(credential)
-  });
+    if (getApps().length === 0) {
+      initializeApp({
+        credential: cert(serviceAccount),
+      });
+    }
+
+    firebaseAdminConfigured = true;
+
+    console.log(
+      "[AUTH] Firebase Admin SDK initialized successfully."
+    );
+  } else {
+    console.warn(
+      "[AUTH] FIREBASE_SERVICE_ACCOUNT_BASE64 is missing."
+    );
+  }
+} catch (error) {
+  console.error(
+    "[AUTH] Firebase Admin SDK initialization failed:",
+    error.message
+  );
 }
 
 export async function verifyFirebasePhoneToken(idToken, phone) {
   if (!firebaseAdminConfigured) {
-    console.warn("[AUTH] Firebase Admin SDK is not configured. Allowing dev phone verification mode for testing.");
-    return { phone_number: phone, devMode: true };
+    console.warn(
+      "[AUTH] Firebase Admin SDK is not configured. " +
+      "Allowing dev phone verification mode for testing."
+    );
+
+    return {
+      phone_number: phone,
+      devMode: true,
+    };
   }
 
   const decodedToken = await getAuth().verifyIdToken(idToken);
-  if (!decodedToken.phone_number || decodedToken.phone_number !== phone) {
-    const error = new Error("The verified phone number does not match the submitted phone number.");
+
+  if (
+    !decodedToken.phone_number ||
+    decodedToken.phone_number !== phone
+  ) {
+    const error = new Error(
+      "The verified phone number does not match the submitted phone number."
+    );
+
     error.status = 400;
     throw error;
   }
