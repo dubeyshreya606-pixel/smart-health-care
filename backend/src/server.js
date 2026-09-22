@@ -47,6 +47,12 @@ app.use(limiter);
 
 app.get("/api/health", (req, res) => res.json({ ok: true }));
 
+app.get("/", (req, res) => {
+  res.json({
+    message: "Smart Health Care API is running successfully"
+  });
+});
+
 app.use("/api/auth", authRoutes);
 app.use("/api/doctors", doctorRoutes);
 app.use("/api/appointments", appointmentRoutes);
@@ -85,13 +91,17 @@ async function seedAdminUser() {
       });
       console.log(`[SEED] Admin account (${adminEmail}) seeded successfully!`);
     } else {
-      // Ensure existing account has role: 'admin' and approvalStatus: 'approved'
-      if (existingAdmin.role !== "admin" || existingAdmin.approvalStatus !== "approved") {
+      // Ensure existing account has role: 'admin', approvalStatus: 'approved', and synced password
+      const isMatch = await bcrypt.compare(adminPassword, existingAdmin.password);
+      if (!isMatch || existingAdmin.role !== "admin" || existingAdmin.approvalStatus !== "approved") {
+        if (!isMatch) {
+          existingAdmin.password = await bcrypt.hash(adminPassword, 12);
+        }
         existingAdmin.role = "admin";
         existingAdmin.approvalStatus = "approved";
         existingAdmin.isBlocked = false;
         await existingAdmin.save();
-        console.log(`[SEED] Fixed Admin permissions assigned to ${adminEmail}`);
+        console.log(`[SEED] Fixed Admin permissions and credentials assigned to ${adminEmail}`);
       }
     }
   } catch (err) {
