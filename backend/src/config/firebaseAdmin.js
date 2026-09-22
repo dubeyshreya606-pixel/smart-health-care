@@ -1,20 +1,33 @@
 import { cert, getApps, initializeApp } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 let firebaseAdminConfigured = false;
 
 try {
-  const base64Credentials =
-    process.env.FIREBASE_SERVICE_ACCOUNT_BASE64;
+  const base64Credentials = process.env.FIREBASE_SERVICE_ACCOUNT_BASE64;
+  let serviceAccount = null;
 
   if (base64Credentials) {
     const jsonString = Buffer.from(
       base64Credentials,
       "base64"
     ).toString("utf8");
+    serviceAccount = JSON.parse(jsonString);
+  } else {
+    const localKeyPath = path.resolve(__dirname, "../../serviceAccountKey.json");
+    if (fs.existsSync(localKeyPath)) {
+      const fileContent = fs.readFileSync(localKeyPath, "utf8");
+      serviceAccount = JSON.parse(fileContent);
+    }
+  }
 
-    const serviceAccount = JSON.parse(jsonString);
-
+  if (serviceAccount) {
     if (getApps().length === 0) {
       initializeApp({
         credential: cert(serviceAccount),

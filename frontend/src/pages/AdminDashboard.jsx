@@ -200,7 +200,7 @@ export default function AdminDashboard() {
                 <span style={{ fontSize: "13px", color: "#64748b", fontWeight: "600" }}>Total Doctors</span>
                 <Stethoscope size={20} color="#0284c7" />
               </div>
-              <strong style={{ fontSize: "32px", fontWeight: "800", color: "#0f172a", display: "block", margin: "8px 0 4px" }}>{stats?.totalDoctors ?? "-"}</strong>
+              <strong style={{ fontSize: "32px", fontWeight: "800", color: "#0f172a", display: "block", margin: "8px 0 4px" }}>{stats?.totalDoctors ?? 0}</strong>
               <span style={{ fontSize: "12px", color: "#64748b" }}>Registered medical professionals</span>
             </div>
 
@@ -209,7 +209,7 @@ export default function AdminDashboard() {
                 <span style={{ fontSize: "13px", color: "#64748b", fontWeight: "600" }}>Pending Applications</span>
                 <Clock size={20} color="#f59e0b" />
               </div>
-              <strong style={{ fontSize: "32px", fontWeight: "800", color: "#0f172a", display: "block", margin: "8px 0 4px" }}>{stats?.pendingDoctors ?? "-"}</strong>
+              <strong style={{ fontSize: "32px", fontWeight: "800", color: "#0f172a", display: "block", margin: "8px 0 4px" }}>{stats?.pendingDoctors ?? 0}</strong>
               <span style={{ fontSize: "12px", color: "#64748b" }}>Awaiting license review</span>
             </div>
 
@@ -218,7 +218,7 @@ export default function AdminDashboard() {
                 <span style={{ fontSize: "13px", color: "#64748b", fontWeight: "600" }}>Approved Doctors</span>
                 <CheckCircle2 size={20} color="#10b981" />
               </div>
-              <strong style={{ fontSize: "32px", fontWeight: "800", color: "#0f172a", display: "block", margin: "8px 0 4px" }}>{stats?.approvedDoctors ?? "-"}</strong>
+              <strong style={{ fontSize: "32px", fontWeight: "800", color: "#0f172a", display: "block", margin: "8px 0 4px" }}>{stats?.approvedDoctors ?? 0}</strong>
               <span style={{ fontSize: "12px", color: "#64748b" }}>Verified active specialists</span>
             </div>
 
@@ -227,7 +227,7 @@ export default function AdminDashboard() {
                 <span style={{ fontSize: "13px", color: "#64748b", fontWeight: "600" }}>Total Patients</span>
                 <Users size={20} color="#6366f1" />
               </div>
-              <strong style={{ fontSize: "32px", fontWeight: "800", color: "#0f172a", display: "block", margin: "8px 0 4px" }}>{stats?.totalPatients ?? "-"}</strong>
+              <strong style={{ fontSize: "32px", fontWeight: "800", color: "#0f172a", display: "block", margin: "8px 0 4px" }}>{stats?.totalPatients ?? 0}</strong>
               <span style={{ fontSize: "12px", color: "#64748b" }}>Registered patient accounts</span>
             </div>
           </div>

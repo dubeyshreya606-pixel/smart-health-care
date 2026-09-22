@@ -3,7 +3,7 @@ import { useNavigate, useParams, Link } from "react-router-dom";
 import { io } from "socket.io-client";
 import { Mic, MicOff, Video, VideoOff, PhoneOff, MessageSquare, Activity, FileText, Send, X, CheckCircle2 } from "lucide-react";
 
-const socketUrl = import.meta.env.VITE_SOCKET_URL || "http://localhost:5000";
+const socketUrl = import.meta.env.VITE_SOCKET_URL || "https://smart-health-care-api.onrender.com";
 
 // Helper function to create an animated virtual video stream if physical camera is locked by another window/tab
 function createFallbackStream(userName, userRole) {
