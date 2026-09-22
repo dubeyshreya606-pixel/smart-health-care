@@ -69,33 +69,33 @@ const PORT = process.env.PORT || 5000;
 
 async function seedAdminUser() {
   try {
-    const adminEmail = process.env.ADMIN_EMAIL || "dubeyshreya606@gmail.com";
-    const adminPassword = process.env.ADMIN_PASSWORD || "26112611";
+    const adminEmails = Array.from(new Set([
+      "dubeyshreya606@gmail.com",
+      process.env.ADMIN_EMAIL
+    ].filter(Boolean).map(e => e.toLowerCase().trim())));
 
-    const existingAdmin = await User.findOne({ email: adminEmail });
-    if (!existingAdmin) {
-      const hash = await bcrypt.hash(adminPassword, 12);
-      await User.create({
-        name: process.env.ADMIN_NAME || "System Admin",
-        email: adminEmail,
-        password: hash,
-        role: "admin",
-        approvalStatus: "approved",
-        isBlocked: false,
-        phone: process.env.ADMIN_PHONE || "0000000000"
-      });
-      console.log(`[SEED] Admin account (${adminEmail}) seeded successfully!`);
-    } else {
-      // Ensure existing account has role: 'admin', approvalStatus: 'approved', and synced password
-      const isMatch = await bcrypt.compare(adminPassword, existingAdmin.password);
-      if (!isMatch || existingAdmin.role !== "admin" || existingAdmin.approvalStatus !== "approved") {
-        existingAdmin.password = await bcrypt.hash(adminPassword, 12);
-        existingAdmin.role = "admin";
-        existingAdmin.approvalStatus = "approved";
-        existingAdmin.isBlocked = false;
-        await existingAdmin.save();
-        console.log(`[SEED] Fixed Admin permissions and credentials assigned to ${adminEmail}`);
-      }
+    for (const email of adminEmails) {
+      const pwd = (email === "dubeyshreya606@gmail.com") 
+        ? (process.env.ADMIN_PASSWORD || "26112611")
+        : (process.env.ADMIN_PASSWORD || "26112611");
+
+      const hash = await bcrypt.hash(pwd, 12);
+      await User.findOneAndUpdate(
+        { email },
+        {
+          $set: {
+            name: process.env.ADMIN_NAME || "System Admin",
+            email,
+            password: hash,
+            role: "admin",
+            approvalStatus: "approved",
+            isBlocked: false,
+            phone: process.env.ADMIN_PHONE || "0000000000"
+          }
+        },
+        { upsert: true, new: true }
+      );
+      console.log(`[SEED] Admin account (${email}) successfully seeded and credentials synced.`);
     }
   } catch (err) {
     console.error("[SEED] Error seeding admin user:", err);

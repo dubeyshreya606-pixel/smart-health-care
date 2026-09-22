@@ -79,14 +79,24 @@ router.post("/register", verifyHumanToken, async (req, res, next) => {
 router.post("/login", async (req, res, next) => {
   try {
     const { email, password, role } = req.body;
-    const user = await User.findOne({ email });
+    const cleanEmail = (email || "").trim().toLowerCase();
+    const user = await User.findOne({
+      $or: [
+        { email: cleanEmail },
+        { email: { $regex: new RegExp(`^${cleanEmail}$`, "i") } }
+      ]
+    });
 
     if (!user || (role && user.role !== role) || !(await bcrypt.compare(password, user.password))) {
       return res.status(401).json({ message: "Invalid email or password for the selected portal." });
     }
 
-    const adminEmail = (process.env.ADMIN_EMAIL || "dubeyshreya606@gmail.com").toLowerCase();
-    if (user.role === "admin" && user.email.toLowerCase() !== adminEmail) {
+    const allowedAdminEmails = Array.from(new Set([
+      "dubeyshreya606@gmail.com",
+      process.env.ADMIN_EMAIL
+    ].filter(Boolean).map(e => e.toLowerCase().trim())));
+
+    if (user.role === "admin" && !allowedAdminEmails.includes(user.email.toLowerCase())) {
       return res.status(403).json({
         message: "Admin portal access is strictly restricted to authorized system administrator."
       });
