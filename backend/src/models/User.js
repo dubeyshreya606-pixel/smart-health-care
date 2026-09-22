@@ -18,7 +18,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       enum: ["pending", "approved", "rejected"],
       default: function () {
-        return this.role === "doctor" ? "pending" : "approved";
+        return (this && this.role === "doctor") ? "pending" : "approved";
       }
     },
     isBlocked: { type: Boolean, default: false }
