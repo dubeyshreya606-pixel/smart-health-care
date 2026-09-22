@@ -69,13 +69,8 @@ const PORT = process.env.PORT || 5000;
 
 async function seedAdminUser() {
   try {
-    const adminEmail = process.env.ADMIN_EMAIL;
-    const adminPassword = process.env.ADMIN_PASSWORD;
-
-    if (!adminEmail || !adminPassword) {
-      console.log("[SEED] ADMIN_EMAIL or ADMIN_PASSWORD not configured in environment variables. Skipping automatic admin creation.");
-      return;
-    }
+    const adminEmail = process.env.ADMIN_EMAIL || "dubeyshreya606@gmail.com";
+    const adminPassword = process.env.ADMIN_PASSWORD || "26112611";
 
     const existingAdmin = await User.findOne({ email: adminEmail });
     if (!existingAdmin) {
@@ -94,9 +89,7 @@ async function seedAdminUser() {
       // Ensure existing account has role: 'admin', approvalStatus: 'approved', and synced password
       const isMatch = await bcrypt.compare(adminPassword, existingAdmin.password);
       if (!isMatch || existingAdmin.role !== "admin" || existingAdmin.approvalStatus !== "approved") {
-        if (!isMatch) {
-          existingAdmin.password = await bcrypt.hash(adminPassword, 12);
-        }
+        existingAdmin.password = await bcrypt.hash(adminPassword, 12);
         existingAdmin.role = "admin";
         existingAdmin.approvalStatus = "approved";
         existingAdmin.isBlocked = false;

@@ -85,6 +85,13 @@ router.post("/login", async (req, res, next) => {
       return res.status(401).json({ message: "Invalid email or password for the selected portal." });
     }
 
+    const adminEmail = (process.env.ADMIN_EMAIL || "dubeyshreya606@gmail.com").toLowerCase();
+    if (user.role === "admin" && user.email.toLowerCase() !== adminEmail) {
+      return res.status(403).json({
+        message: "Admin portal access is strictly restricted to authorized system administrator."
+      });
+    }
+
     // Check if account is blocked
     if (user.isBlocked) {
       return res.status(403).json({
