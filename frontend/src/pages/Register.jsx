@@ -181,45 +181,9 @@ export default function Register() {
   }
 
   return (
-    <main className="auth-page">
-      <div className="auth-container">
-        {/* Left Visual Banner */}
-        <div className="auth-banner">
-          <div className="banner-brand">
-            <div className="logo-badge" style={{ width: "36px", height: "36px" }}>
-              <Activity size={20} color="#ffffff" />
-            </div>
-            <span>Smart Healthcare</span>
-          </div>
-
-          <div className="banner-content">
-            <h2>Join our Digital Health Network</h2>
-            <p>
-              Register today as a patient to schedule appointments, consult specialist doctors virtually, and store medical records securely.
-            </p>
-
-            <div className="banner-features">
-              <div className="feature-pill">
-                <Sparkles size={18} color="#38bdf8" />
-                <span>Instant Appointment Booking</span>
-              </div>
-              <div className="feature-pill">
-                <Award size={18} color="#34d399" />
-                <span>Doctor License Verification System</span>
-              </div>
-              <div className="feature-pill">
-                <Phone size={18} color="#a78bfa" />
-                <span>Secure SMS OTP Authentication</span>
-              </div>
-            </div>
-          </div>
-
-          <div style={{ fontSize: "12px", color: "#64748b", fontWeight: "500" }}>
-            © 2026 Smart Healthcare System. All rights reserved.
-          </div>
-        </div>
-
-        {/* Right Active Form Container */}
+    <main className="auth-page fade-in">
+      <div className="auth-container" style={{ gridTemplateColumns: "1fr", maxWidth: "520px" }}>
+        {/* Active Form Container */}
         <form className="auth-card" onSubmit={submit}>
           <h1>Create an account</h1>
           <p className="muted" style={{ fontSize: "14px", color: "#64748b", marginBottom: "8px" }}>
