@@ -25,6 +25,18 @@ router.post("/", auth, async (req, res, next) => {
     const fee = doctor?.fees ?? 0;
     const resolvedTimeSlot = timeSlot || "Flexible";
 
+    // Prevent duplicate appointment creation within 10 seconds window for same patient, doctor, and reason
+    const existingRecent = await Appointment.findOne({
+      patient: req.user.id,
+      doctor: doctorId,
+      reason: reason,
+      createdAt: { $gte: new Date(Date.now() - 10000) }
+    }).populate("doctor", "name specialization fees").populate("patient", "name email");
+
+    if (existingRecent) {
+      return res.status(200).json(existingRecent);
+    }
+
     const isPaid = Boolean(payNow && paymentMethod && paymentMethod !== "cash");
     const validMethod = ["upi", "card", "netbanking", "cash"].includes(paymentMethod) ? paymentMethod : (isPaid ? "upi" : "cash");
 

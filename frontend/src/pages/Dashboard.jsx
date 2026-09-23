@@ -31,6 +31,7 @@ export default function Dashboard() {
   const [payOption, setPayOption] = useState("now");
   const [bookingPaymentMethod, setBookingPaymentMethod] = useState("upi");
   const [message, setMessage] = useState("");
+  const [isBooking, setIsBooking] = useState(false);
 
   // Doctor search & selection state
   const [doctorSearchQuery, setDoctorSearchQuery] = useState("");
@@ -141,10 +142,22 @@ export default function Dashboard() {
 
   async function book(e) {
     e.preventDefault();
+    if (isBooking) return;
+
     if (!form.doctorId) {
       setMessage("Please select a doctor from the dropdown or doctor cards.");
       return;
     }
+    if (!form.date) {
+      setMessage("Please select an appointment date and time.");
+      return;
+    }
+    if (!form.reason?.trim()) {
+      setMessage("Please enter a reason for your visit.");
+      return;
+    }
+
+    setIsBooking(true);
     try {
       const payload = {
         ...form,
@@ -158,6 +171,8 @@ export default function Dashboard() {
       load();
     } catch (err) {
       setMessage(err.response?.data?.message || "Could not book appointment.");
+    } finally {
+      setIsBooking(false);
     }
   }
 
@@ -471,9 +486,9 @@ export default function Dashboard() {
                   </div>
                 )}
 
-                <button type="submit" className="primary" style={{ padding: "14px 32px", fontSize: "15px" }}>
+                <button type="submit" className="primary" disabled={isBooking} style={{ padding: "14px 32px", fontSize: "15px", opacity: isBooking ? 0.6 : 1 }}>
                   <Calendar size={18} />
-                  <span>Confirm & Schedule Appointment</span>
+                  <span>{isBooking ? "Booking Appointment..." : "Confirm & Schedule Appointment"}</span>
                 </button>
               </form>
 
@@ -533,6 +548,7 @@ export default function Dashboard() {
                             <span className="fee-badge">₹{doc.fees || 0}</span>
                           </div>
                           <button
+                            type="button"
                             className={form.doctorId === doc._id ? "success-btn" : "primary"}
                             onClick={() => handleSelectDoctor(doc._id)}
                             style={{ padding: "8px 18px", fontSize: "13px", borderRadius: "10px" }}
