@@ -3,7 +3,16 @@ import { useNavigate, useParams, Link } from "react-router-dom";
 import { io } from "socket.io-client";
 import { Mic, MicOff, Video, VideoOff, PhoneOff, MessageSquare, Activity, FileText, Send, X, CheckCircle2 } from "lucide-react";
 
-const socketUrl = import.meta.env.VITE_SOCKET_URL || "https://smart-health-care-api.onrender.com";
+const getSocketUrl = () => {
+  if (import.meta.env.VITE_SOCKET_URL) return import.meta.env.VITE_SOCKET_URL;
+  if (typeof window !== "undefined") {
+    const hostname = window.location.hostname;
+    if (hostname === "localhost" || hostname === "127.0.0.1" || hostname.startsWith("192.168.") || hostname.startsWith("10.") || hostname.endsWith(".local")) {
+      return `http://${hostname}:5000`;
+    }
+  }
+  return "https://smart-health-care-api.onrender.com";
+};
 
 // Helper function to create an animated virtual video stream if physical camera is locked by another window/tab
 function createFallbackStream(userName, userRole) {
@@ -91,6 +100,11 @@ export default function Telemedicine() {
   
   // In-call Chat state
   const [showChat, setShowChat] = useState(false);
+  const showChatRef = useRef(showChat);
+  const isSendingRef = useRef(false);
+  useEffect(() => {
+    showChatRef.current = showChat;
+  }, [showChat]);
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState("");
   const [unreadChatCount, setUnreadChatCount] = useState(0);
@@ -194,7 +208,12 @@ export default function Telemedicine() {
         }
       };
 
-      socket.current = io(socketUrl);
+      if (socket.current) socket.current.disconnect();
+      socket.current = io(getSocketUrl());
+      if (!active) {
+        socket.current.disconnect();
+        return;
+      }
 
       socket.current.emit("join-room", {
         roomId,
@@ -292,19 +311,26 @@ export default function Telemedicine() {
         await handleCandidate(candidate);
       });
 
-      socket.current.on("chat-message", (msg) => {
-        setChatMessages(prev => [...prev, msg]);
-        if (!showChat) {
+      const handleIncomingMessage = (msg) => {
+        if (!msg || !msg.text) return;
+        const now = Date.now();
+        const msgTime = msg.timestamp || now;
+        setChatMessages(prev => {
+          if (msg.id && prev.some(m => m.id === msg.id)) return prev;
+          const isDuplicate = prev.some(m => 
+            m.sender === msg.sender && 
+            m.text === msg.text && 
+            (m.time === msg.time || Math.abs((m.timestamp || now) - msgTime) < 10000)
+          );
+          if (isDuplicate) return prev;
+          return [...prev, { ...msg, timestamp: msgTime }];
+        });
+        if (!showChatRef.current) {
           setUnreadChatCount(prev => prev + 1);
         }
-      });
+      };
 
-      socket.current.on("receive-chat", (msg) => {
-        setChatMessages(prev => [...prev, msg]);
-        if (!showChat) {
-          setUnreadChatCount(prev => prev + 1);
-        }
-      });
+      socket.current.on("chat-message", handleIncomingMessage);
 
       socket.current.on("media-state-changed", (mediaState) => {
         setRemoteMediaState(mediaState);
@@ -378,14 +404,27 @@ export default function Telemedicine() {
   }
 
   function sendChatMessage(e) {
-    e.preventDefault();
-    if (!chatInput.trim()) return;
+    if (e) e.preventDefault();
+    const text = chatInput.trim();
+    if (!text || isSendingRef.current) return;
+
+    isSendingRef.current = true;
+    setTimeout(() => { isSendingRef.current = false; }, 300);
+
+    const now = Date.now();
     const msg = {
+      id: now + "-" + Math.random().toString(36).substring(2, 7),
+      timestamp: now,
       sender: currentUser.name || "Me",
-      text: chatInput.trim(),
+      text: text,
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
-    setChatMessages(prev => [...prev, msg]);
+
+    setChatMessages(prev => {
+      if (prev.some(m => m.id === msg.id)) return prev;
+      return [...prev, msg];
+    });
+
     if (socket.current) {
       socket.current.emit("chat-message", { roomId, msg });
     }

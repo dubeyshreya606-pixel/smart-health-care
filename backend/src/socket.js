@@ -115,20 +115,24 @@ export function setupSocket(io) {
     socket.on("send-chat", ({ roomId, message, senderName, senderRole, msg }) => {
       if (!roomId) return;
       const chatPayload = msg || {
-        id: Math.random().toString(36).substring(2, 9),
+        id: Date.now() + "-" + Math.random().toString(36).substring(2, 7),
+        timestamp: Date.now(),
         text: message,
         sender: senderName || socket.data.userName || "Participant",
         senderRole: senderRole || socket.data.userRole || "user",
         time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
       };
-      io.to(roomId).emit("receive-chat", chatPayload);
-      io.to(roomId).emit("chat-message", chatPayload);
+      socket.to(roomId).emit("chat-message", chatPayload);
     });
 
     socket.on("chat-message", ({ roomId, msg }) => {
       if (!roomId) return;
-      io.to(roomId).emit("chat-message", msg);
-      io.to(roomId).emit("receive-chat", msg);
+      const chatPayload = {
+        id: msg?.id || (Date.now() + "-" + Math.random().toString(36).substring(2, 7)),
+        timestamp: msg?.timestamp || Date.now(),
+        ...msg
+      };
+      socket.to(roomId).emit("chat-message", chatPayload);
     });
 
     // Disconnection
